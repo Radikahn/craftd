@@ -1,15 +1,17 @@
 struct QueryPacket {
-    packet_type: i8,
-    session_id: i8,
+    packet_type: u8,
+    session_id: i32,
 }
 
 // Packet infra is provided via [Query Minecraft Wiki](https://minecraft.wiki/w/Query)
 // Some code is translated from [McClient](https://github.com/Sch8ill/mcclient-lib/blob/master)
 
-fn pack(query: QueryPacket, payload: &[u8]) -> &[u8] {
-    let mut packet: &[u8] = "254223".as_bytes();
-    packet += &query.packet_type.to_ne_bytes();
-    packet += &query.session_id.to_ne_bytes();
-    packet += payload;
+const MAGIC: [u8; 2] = [0xFE, 0xFD];
+
+fn pack(query: QueryPacket, payload: &[u8]) -> Vec<u8> {
+    let mut packet = Vec::with_capacity(2 + 1 + 4 + payload.len());
+    packet.extend_from_slice(&MAGIC);
+    packet.push(query.packet_type);
+    packet.extend_from_slice(&(query.session_id & 0x0F0F_0F0F).to_be_bytes());
     return packet;
 }
